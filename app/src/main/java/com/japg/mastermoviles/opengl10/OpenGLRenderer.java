@@ -247,7 +247,7 @@ public class OpenGLRenderer implements Renderer {
 		// Enlazamos el programa OpenGL
 		program = ShaderHelper.linkProgram(vertexShader, fragmentShader);
 		
-		// En depuración validamos el programa OpenGL
+		// En depuración validamos el programa OpenGLK
 		if (LoggerConfig.ON) {
 			ShaderHelper.validateProgram(program);
 		}
@@ -375,4 +375,9 @@ public class OpenGLRenderer implements Renderer {
     public void handleTouchRotation(float angle) {
         rotationDeltaZ = angle;
     }
+
+    public void handleGyroscopeRotation(float x, float y) {
+		rotationDeltaX = -x;
+		rotationDeltaY = -y;
+	}
 }

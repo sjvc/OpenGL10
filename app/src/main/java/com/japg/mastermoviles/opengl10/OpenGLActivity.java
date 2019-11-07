@@ -3,6 +3,10 @@ package com.japg.mastermoviles.opengl10;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.ConfigurationInfo;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
@@ -22,14 +26,18 @@ import androidx.core.view.GestureDetectorCompat;
 import com.japg.mastermoviles.opengl10.util.RotationGestureDetector;
 
 
-public class OpenGLActivity extends AppCompatActivity implements GestureDetector.OnGestureListener, ScaleGestureDetector.OnScaleGestureListener, RotationGestureDetector.OnRotationGestureListener {
+public class OpenGLActivity extends AppCompatActivity implements GestureDetector.OnGestureListener, ScaleGestureDetector.OnScaleGestureListener, RotationGestureDetector.OnRotationGestureListener, SensorEventListener {
     private OpenGLSurfaceView glSurfaceView;
     private OpenGLRenderer mOpenGLRenderer;
     private boolean rendererSet = false;
 
+    private boolean isTouchingScreen = false;
     private GestureDetectorCompat mGestureDetector;
     private ScaleGestureDetector mScaleGestureDetector;
     private RotationGestureDetector mRotationGestureDetector;
+
+    private SensorManager mSensorManager;
+    private Sensor mGyroscopeSensor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +46,9 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
         mGestureDetector = new GestureDetectorCompat(this, this);
         mScaleGestureDetector = new ScaleGestureDetector(this, this);
         mRotationGestureDetector = new RotationGestureDetector(this);
+
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        mGyroscopeSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
         glSurfaceView = new OpenGLSurfaceView(this);
         mOpenGLRenderer = new OpenGLRenderer(this);
@@ -73,6 +84,12 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
         glSurfaceView.setOnTouchListener(new OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    isTouchingScreen = true;
+                } else if (event.getAction() == MotionEvent.ACTION_UP && event.getPointerCount() == 1) {
+                    isTouchingScreen = false;
+                }
+
                 boolean retVal = v.performClick();
                 retVal = mScaleGestureDetector.onTouchEvent(event) || retVal ;
                 retVal = mRotationGestureDetector.onTouchEvent(event) || retVal;
@@ -163,8 +180,35 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
     }
 
     @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (isTouchingScreen || event.sensor.getType() != Sensor.TYPE_GYROSCOPE){
+            return;
+        }
+
+        final float x = -event.values[0];
+        final float y = -event.values[1];
+
+        glSurfaceView.queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                mOpenGLRenderer.handleGyroscopeRotation(x, y);
+            }
+        });
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
+
+        if (mGyroscopeSensor != null){
+            mSensorManager.unregisterListener(this);
+        }
+
         if (rendererSet) {
             glSurfaceView.onPause();
         }
@@ -173,6 +217,11 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
     @Override
     protected void onResume() {
         super.onResume();
+
+        if (mGyroscopeSensor != null){
+            mSensorManager.registerListener(this, mGyroscopeSensor, SensorManager.SENSOR_DELAY_GAME);
+        }
+
         if (rendererSet) {
             glSurfaceView.onResume();
         }
