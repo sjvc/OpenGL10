@@ -85,9 +85,9 @@ public class OpenGLRenderer implements Renderer {
 	private int	texture;
 	
 	// Rotación alrededor de los ejes
-	private float rX = 0f;
-	private float rY = 0f;
-	private float rZ = 0f;
+	private float rotationDeltaX = 0f;
+	private float rotationDeltaY = 0f;
+	private float rotationDeltaZ = 0f;
 
 	// Posición Z
     private float mZPos = -4f;
@@ -101,8 +101,13 @@ public class OpenGLRenderer implements Renderer {
 		
 	// Matrices de proyección y de vista
 	private final float[] projectionMatrix = new float[16];
-	private final float[] modelMatrix = new float[16]; // Matriz del obj3DS
+	private final float[] modelMatrix = new float[16];
 	private final float[] MVP = new float[16];
+
+	// Matrices para gestionar la rotación
+	private final float[] currentRotationMatrix = new float[16];
+	private final float[] totalRotationMatrix = new float[16];
+	private final float[] tempMatrix = new float[16];
 
 	private Resource3DSReader obj3DS;
 	
@@ -262,7 +267,9 @@ public class OpenGLRenderer implements Renderer {
 		aNormalLocation = glGetAttribLocation(program, A_NORMAL);
 		glEnableVertexAttribArray(aNormalLocation);
 		aUVLocation = glGetAttribLocation(program, A_UV);
-		glEnableVertexAttribArray(aUVLocation);	
+		glEnableVertexAttribArray(aUVLocation);
+
+		setIdentityM(totalRotationMatrix, 0);
 	}
 	
 	@Override
@@ -296,18 +303,29 @@ public class OpenGLRenderer implements Renderer {
 		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		//glEnable(GL_DITHER);
 		glLineWidth(2.0f);
-		
-		
-		
+
 		// Creamos la matriz del modelo 
 		setIdentityM(modelMatrix, 0);
 		translateM(modelMatrix, 0, 0f, 0.0f, mZPos);
 
-		// Rotación alrededor de los ejes
-		// rotateM(modelMatrix, 0, rZ, 0f, 0f, 1f);
-        rotateM(modelMatrix, 0, rY, 0f, 1f, 0f);
-        rotateM(modelMatrix, 0, rX, 1f, 0f, 0f);
+		// Establecer en currentRotationMatrix la rotación actual (el "delta" de lo que se ha rotado)
+		setIdentityM(currentRotationMatrix, 0);
+		rotateM(currentRotationMatrix, 0, rotationDeltaZ, 0.0f, 0.0f, 1.0f);
+		rotateM(currentRotationMatrix, 0, rotationDeltaY, 0.0f, 1.0f, 0.0f);
+		rotateM(currentRotationMatrix, 0, rotationDeltaX, 1.0f, 0.0f, 0.0f);
+		rotationDeltaX = 0;
+		rotationDeltaY = 0;
+		rotationDeltaZ = 0;
 
+		// Multiplicar la rotación actual por la acumulada, y guardar el resultado en la acumulada
+		multiplyMM(tempMatrix, 0, currentRotationMatrix, 0, totalRotationMatrix, 0);
+		System.arraycopy(tempMatrix, 0, totalRotationMatrix, 0, 16);
+
+		// Rotar el modelo con la rotación acumulada
+		multiplyMM(tempMatrix, 0, modelMatrix, 0, totalRotationMatrix, 0);
+		System.arraycopy(tempMatrix, 0, modelMatrix, 0, 16);
+
+		// Multiplicamos la matriz de proyección por la del modelo
 		multiplyMM(MVP, 0, projectionMatrix, 0, modelMatrix, 0);
 		//System.arraycopy(temp, 0, projectionMatrix, 0, temp.length);
 
@@ -346,12 +364,8 @@ public class OpenGLRenderer implements Renderer {
 
 	
 	public void handleTouchScroll(float normDistX, float normDistY) {
-		double radX = Math.toRadians(rX);
-		double radY = Math.toRadians(rY);
-		double radZ = Math.toRadians(rZ);
-
-		rX -= normDistY * 180f;
-		rY -= normDistX * 180f;
+		rotationDeltaX = -normDistY * 180f;
+		rotationDeltaY = -normDistX * 180f;
 	}
 
 	public void handleTouchScale(float scaleFactor) {
@@ -359,12 +373,6 @@ public class OpenGLRenderer implements Renderer {
     }
 
     public void handleTouchRotation(float angle) {
-	    double radX = Math.toRadians(rX);
-        double radY = Math.toRadians(rY);
-        double radZ = Math.toRadians(rZ);
-
-        // rX += angle * Math.sin(-radY) * Math.cos(radZ);
-        // rY += angle * Math.sin(radX) * Math.cos(radZ);
-	    // rZ += angle * Math.cos(radX) * Math.cos(radY);
+        rotationDeltaZ = angle;
     }
 }
