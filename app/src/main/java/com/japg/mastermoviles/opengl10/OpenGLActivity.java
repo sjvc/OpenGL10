@@ -6,26 +6,41 @@ import android.content.pm.ConfigurationInfo;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GestureDetectorCompat;
+
+import com.japg.mastermoviles.opengl10.util.RotationGestureDetector;
 
 
-public class OpenGLActivity extends AppCompatActivity {
-    private GLSurfaceView glSurfaceView;
+public class OpenGLActivity extends AppCompatActivity implements GestureDetector.OnGestureListener, ScaleGestureDetector.OnScaleGestureListener, RotationGestureDetector.OnRotationGestureListener {
+    private OpenGLSurfaceView glSurfaceView;
+    private OpenGLRenderer mOpenGLRenderer;
     private boolean rendererSet = false;
+
+    private GestureDetectorCompat mGestureDetector;
+    private ScaleGestureDetector mScaleGestureDetector;
+    private RotationGestureDetector mRotationGestureDetector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
-        glSurfaceView = new GLSurfaceView(this);
-        final OpenGLRenderer openGLRenderer = new OpenGLRenderer(this);
+
+        mGestureDetector = new GestureDetectorCompat(this, this);
+        mScaleGestureDetector = new ScaleGestureDetector(this, this);
+        mRotationGestureDetector = new RotationGestureDetector(this);
+
+        glSurfaceView = new OpenGLSurfaceView(this);
+        mOpenGLRenderer = new OpenGLRenderer(this);
         final ActivityManager activityManager =
                 (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         final ConfigurationInfo configurationInfo =
@@ -45,7 +60,7 @@ public class OpenGLActivity extends AppCompatActivity {
             // Para que funcione en el emulador
             glSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
             // Asigna nuestro renderer.
-            glSurfaceView.setRenderer(openGLRenderer);
+            glSurfaceView.setRenderer(mOpenGLRenderer);
             rendererSet = true;
             Toast.makeText(this, "OpenGL ES 2.0 soportado",
                     Toast.LENGTH_LONG).show();
@@ -58,30 +73,93 @@ public class OpenGLActivity extends AppCompatActivity {
         glSurfaceView.setOnTouchListener(new OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                // Convert touch coordinates into normalized device
-                // coordinates, keeping in mind that Android's Y
-                // coordinates are inverted.
-                final float normalizedX = (event.getX() / (float) v.getWidth()) * 2 - 1;
-                final float normalizedY = -((event.getY() / (float) v.getHeight()) * 2 - 1);
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    glSurfaceView.queueEvent(new Runnable() {
-                        @Override
-                        public void run() {
-                            openGLRenderer.handleTouchPress(normalizedX, normalizedY);
-                        }
-                    });
-                } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
-                    glSurfaceView.queueEvent(new Runnable() {
-                        @Override
-                        public void run() {
-                            openGLRenderer.handleTouchDrag(normalizedX, normalizedY);
-                        }
-                    });
-                }
-                return true;
+                boolean retVal = v.performClick();
+                retVal = mScaleGestureDetector.onTouchEvent(event) || retVal ;
+                retVal = mRotationGestureDetector.onTouchEvent(event) || retVal;
+                retVal = mGestureDetector.onTouchEvent(event) || retVal;
+                return retVal;
             }
         });
+
         setContentView(glSurfaceView);
+    }
+
+    @Override
+    public boolean onDown(MotionEvent e) {
+        return true;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent e) {
+
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent e) {
+        return false;
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        final float normDistX = distanceX / (float)glSurfaceView.getWidth();
+        final float normDistY = distanceY / (float)glSurfaceView.getHeight();
+
+        glSurfaceView.queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                mOpenGLRenderer.handleTouchScroll(normDistX, normDistY);
+            }
+        });
+
+        return true;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent e) {
+
+    }
+
+    @Override
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        return false;
+    }
+
+    @Override
+    public boolean onScaleBegin(ScaleGestureDetector detector) {
+        return true;
+    }
+
+    @Override
+    public boolean onScale(ScaleGestureDetector detector) {
+        final float scaleFactor = detector.getScaleFactor();
+
+        glSurfaceView.queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                mOpenGLRenderer.handleTouchScale(scaleFactor);
+            }
+        });
+
+        return true;
+    }
+
+    @Override
+    public void onScaleEnd(ScaleGestureDetector detector) {
+
+    }
+
+    @Override
+    public boolean OnRotation(RotationGestureDetector rotationDetector) {
+        final float angle = rotationDetector.getAngle();
+
+        glSurfaceView.queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                mOpenGLRenderer.handleTouchRotation(angle);
+            }
+        });
+
+        return true;
     }
 
     @Override
@@ -99,24 +177,4 @@ public class OpenGLActivity extends AppCompatActivity {
             glSurfaceView.onResume();
         }
     }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
 }

@@ -87,6 +87,10 @@ public class OpenGLRenderer implements Renderer {
 	// Rotación alrededor de los ejes
 	private float rX = 0f;
 	private float rY = 0f;
+	private float rZ = 0f;
+
+	// Posición Z
+    private float mZPos = -4f;
 	
 	private static final int POSITION_COMPONENT_COUNT = 3;
 	private static final int NORMAL_COMPONENT_COUNT = 3;
@@ -97,10 +101,10 @@ public class OpenGLRenderer implements Renderer {
 		
 	// Matrices de proyección y de vista
 	private final float[] projectionMatrix = new float[16];
-	private final float[] modelMatrix = new float[16];
+	private final float[] modelMatrix = new float[16]; // Matriz del obj3DS
 	private final float[] MVP = new float[16];
 
-	Resource3DSReader obj3DS;
+	private Resource3DSReader obj3DS;
 	
 	float[] tablaVertices = {
 		// Abanico de triángulos, x, y, R, G, B
@@ -297,19 +301,20 @@ public class OpenGLRenderer implements Renderer {
 		
 		// Creamos la matriz del modelo 
 		setIdentityM(modelMatrix, 0);
-		translateM(modelMatrix, 0, 0f, 0.0f, -4.0f);
-		// Rotación alrededor del eje x e y
-		rotateM(modelMatrix, 0, rY, 0f, 1f, 0f);
-		rotateM(modelMatrix, 0, rX, 1f, 0f, 0f);
-				
+		translateM(modelMatrix, 0, 0f, 0.0f, mZPos);
+
+		// Rotación alrededor de los ejes
+		// rotateM(modelMatrix, 0, rZ, 0f, 0f, 1f);
+        rotateM(modelMatrix, 0, rY, 0f, 1f, 0f);
+        rotateM(modelMatrix, 0, rX, 1f, 0f, 0f);
+
 		multiplyMM(MVP, 0, projectionMatrix, 0, modelMatrix, 0);
 		//System.arraycopy(temp, 0, projectionMatrix, 0, temp.length);
-	
-		
+
 		// Env?a la matriz de proyecci?n multiplicada por modelMatrix al shader
 		glUniformMatrix4fv(uMVPMatrixLocation, 1, false, MVP, 0);
 		// Env?a la matriz modelMatrix al shader
-		glUniformMatrix4fv(uMVMatrixLocation, 1, false, modelMatrix, 0);	
+		glUniformMatrix4fv(uMVMatrixLocation, 1, false, modelMatrix, 0);
 		// Actualizamos el color (Marr?n)
 		//glUniform4f(uColorLocation, 0.78f, 0.49f, 0.12f, 1.0f); 
 		glUniform4f(uColorLocation, 1.0f, 1.0f, 1.0f, 1.0f); 
@@ -338,18 +343,28 @@ public class OpenGLRenderer implements Renderer {
 			glDrawArrays(GL_TRIANGLES, 0, obj3DS.numVertices[i]);
 		}
 	}
+
 	
-	public void handleTouchPress(float normalizedX, float normalizedY) {
-		if (LoggerConfig.ON) {
-			//Log.w(TAG, "Touch Press ["+normalizedX+", "+normalizedY+"]");
-		}
+	public void handleTouchScroll(float normDistX, float normDistY) {
+		double radX = Math.toRadians(rX);
+		double radY = Math.toRadians(rY);
+		double radZ = Math.toRadians(rZ);
+
+		rX -= normDistY * 180f;
+		rY -= normDistX * 180f;
 	}
-	
-	public void handleTouchDrag(float normalizedX, float normalizedY) {
-		if (LoggerConfig.ON) {
-			//Log.w(TAG, "Touch Drag ["+normalizedX+", "+normalizedY+"]");
-		}
-		rX = -normalizedY*180f;
-		rY = normalizedX*180f;
-	}
+
+	public void handleTouchScale(float scaleFactor) {
+        mZPos /= scaleFactor;
+    }
+
+    public void handleTouchRotation(float angle) {
+	    double radX = Math.toRadians(rX);
+        double radY = Math.toRadians(rY);
+        double radZ = Math.toRadians(rZ);
+
+        // rX += angle * Math.sin(-radY) * Math.cos(radZ);
+        // rY += angle * Math.sin(radX) * Math.cos(radZ);
+	    // rZ += angle * Math.cos(radX) * Math.cos(radY);
+    }
 }
