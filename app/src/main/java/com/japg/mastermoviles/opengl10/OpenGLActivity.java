@@ -10,11 +10,14 @@ import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Display;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.view.Surface;
 import android.view.View;
 import android.view.View.OnTouchListener;
+import android.view.WindowManager;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GestureDetectorCompat;
@@ -35,6 +38,8 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
     private SensorManager mSensorManager;
     private Sensor mGyroscopeSensor;
 
+    private Display mDisplay;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,6 +55,8 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
 
         mSwipeView = findViewById(R.id.swipeView);
         mSwipeView.setOnSwipeListener(this);
+
+        mDisplay = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
 
         glSurfaceView = findViewById(R.id.openGLSurfaceView);
         mOpenGLRenderer = new OpenGLRenderer(this);
@@ -185,8 +192,28 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
             return;
         }
 
-        final float x = -event.values[0];
-        final float y = -event.values[1];
+        float sensorX = 0, sensorY = 0;
+        switch (mDisplay.getRotation()) {
+            case Surface.ROTATION_0:
+                sensorX = event.values[0];
+                sensorY = event.values[1];
+                break;
+            case Surface.ROTATION_90:
+                sensorX = -event.values[1];
+                sensorY = event.values[0];
+                break;
+            case Surface.ROTATION_180:
+                sensorX = -event.values[0];
+                sensorY = -event.values[1];
+                break;
+            case Surface.ROTATION_270:
+                sensorX = event.values[1];
+                sensorY = -event.values[0];
+                break;
+        }
+
+        final float x = sensorX;
+        final float y = sensorY;
 
         glSurfaceView.queueEvent(new Runnable() {
             @Override

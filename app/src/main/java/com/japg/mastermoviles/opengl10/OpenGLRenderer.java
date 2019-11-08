@@ -405,8 +405,8 @@ public class OpenGLRenderer implements Renderer {
     }
 
     public void handleGyroscopeRotation(float x, float y) {
-		rotationDeltaX = -x;
-		rotationDeltaY = -y;
+		rotationDeltaX = x;
+		rotationDeltaY = y;
 	}
 
 	public void handleSwipe(float normDistX) {
