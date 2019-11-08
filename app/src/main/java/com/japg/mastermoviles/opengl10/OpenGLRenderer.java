@@ -313,6 +313,15 @@ public class OpenGLRenderer implements Renderer {
 	}
 private float temp;
 	private void draw3DSObject(Resource3DSReader pObj3DS, int pTexture, float pY, float pRy) {
+		/*
+		Hemos de leer las transformaciones que hagamos de abajo a arriba.
+		De esta forma:
+			- 1º rotamos el modelo sobre el eje Y. Como está en (0,0,0), rotará sobre sí mismo.
+			- 2º movemos el modelo en el eje Y
+			- 3º rotamos el modelo en todos los ejes. Como está en (0, X, 0), el objeto rotará "orbitando" el punto (0, 0, 0)
+			- 4º movemos el modelo en el eje Z
+		 */
+
 		// Creamos la matriz del modelo y lo movemos en el eje Z
 		setIdentityM(modelMatrix, 0);
 		translateM(modelMatrix, 0, 0f, 0, mZPos);
@@ -328,7 +337,7 @@ private float temp;
 		multiplyMM(tempMatrix, 0, currentRotationMatrix, 0, totalRotationMatrix, 0);
 		System.arraycopy(tempMatrix, 0, totalRotationMatrix, 0, 16);
 
-		// Rotar el modelo con la rotación acumulada
+		// Rotar el modelo con la rotación acumulada (a esta rotación le afecta las translaciones que hay abajo)
 		multiplyMM(tempMatrix, 0, modelMatrix, 0, totalRotationMatrix, 0);
 		System.arraycopy(tempMatrix, 0, modelMatrix, 0, 16);
 
