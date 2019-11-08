@@ -73,11 +73,9 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
             // Asigna nuestro renderer.
             glSurfaceView.setRenderer(mOpenGLRenderer);
             rendererSet = true;
-            Toast.makeText(this, "OpenGL ES 2.0 soportado",
-                    Toast.LENGTH_LONG).show();
+            // Toast.makeText(this, "OpenGL ES 2.0 soportado", Toast.LENGTH_LONG).show();
         } else {
-            Toast.makeText(this, "Este dispositivo no soporta OpenGL ES 2.0",
-                    Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Este dispositivo no soporta OpenGL ES 2.0", Toast.LENGTH_LONG).show();
             return;
         }
 

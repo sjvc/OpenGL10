@@ -8,7 +8,6 @@ import com.japg.mastermoviles.opengl10.util.LoggerConfig;
 import com.japg.mastermoviles.opengl10.util.Resource3DSReader;
 import com.japg.mastermoviles.opengl10.util.ShaderHelper;
 import com.japg.mastermoviles.opengl10.util.TextResourceReader;
-import com.japg.mastermoviles.opengl10.util.TextureHelper;
 
 import java.nio.Buffer;
 
@@ -109,7 +108,8 @@ public class OpenGLRenderer implements Renderer {
 	private final float[] totalRotationMatrix = new float[16];
 	private final float[] tempMatrix = new float[16];
 
-	private Resource3DSReader obj3DS;
+	private Resource3DSReader obj3DS1;
+	private Resource3DSReader obj3DS2;
 	
 	float[] tablaVertices = {
 		// Abanico de triángulos, x, y, R, G, B
@@ -197,9 +197,12 @@ public class OpenGLRenderer implements Renderer {
 	public OpenGLRenderer(Context context) {
 		this.context = context;
 		
-		// Lee un archivo 3DS desde un recurso
-		obj3DS = new Resource3DSReader();
-		obj3DS.read3DSFromResource(context, R.raw.mono);
+		// Lee un archivos 3DS desde un recurso
+		obj3DS1 = new Resource3DSReader();
+		obj3DS1.read3DSFromResource(context, R.raw.torus);
+
+		obj3DS2 = new Resource3DSReader();
+		obj3DS2.read3DSFromResource(context, R.raw.mono);
 	}
 	
 	@Override
@@ -223,7 +226,7 @@ public class OpenGLRenderer implements Renderer {
 			Log.w(TAG, "Max. Texture Image Units: "+maxTextureImageUnits[0]);
 		}
 		// Cargamos la textura desde los recursos
-		texture = TextureHelper.loadTexture(context, R.drawable.mono_tex);
+		// TODO: texture = TextureHelper.loadTexture(context, R.drawable.mono_tex);
 		
 		// Leemos los shaders
 		if (maxVertexTextureImageUnits[0]>0) {
@@ -304,18 +307,22 @@ public class OpenGLRenderer implements Renderer {
 		//glEnable(GL_DITHER);
 		glLineWidth(2.0f);
 
-		// Creamos la matriz del modelo 
+		// Dibujamos los objetos
+		draw3DSObject(obj3DS1, texture, +1, temp++);
+		draw3DSObject(obj3DS2, texture, -1, 0);
+	}
+private float temp;
+	private void draw3DSObject(Resource3DSReader pObj3DS, int pTexture, float pY, float pRy) {
+		// Creamos la matriz del modelo y lo movemos en el eje Z
 		setIdentityM(modelMatrix, 0);
-		translateM(modelMatrix, 0, 0f, 0.0f, mZPos);
+		translateM(modelMatrix, 0, 0f, 0, mZPos);
 
 		// Establecer en currentRotationMatrix la rotación actual (el "delta" de lo que se ha rotado)
 		setIdentityM(currentRotationMatrix, 0);
 		rotateM(currentRotationMatrix, 0, rotationDeltaZ, 0.0f, 0.0f, 1.0f);
 		rotateM(currentRotationMatrix, 0, rotationDeltaY, 0.0f, 1.0f, 0.0f);
 		rotateM(currentRotationMatrix, 0, rotationDeltaX, 1.0f, 0.0f, 0.0f);
-		rotationDeltaX = 0;
-		rotationDeltaY = 0;
-		rotationDeltaZ = 0;
+		rotationDeltaX = rotationDeltaY = rotationDeltaZ = 0;
 
 		// Multiplicar la rotación actual por la acumulada, y guardar el resultado en la acumulada
 		multiplyMM(tempMatrix, 0, currentRotationMatrix, 0, totalRotationMatrix, 0);
@@ -324,6 +331,12 @@ public class OpenGLRenderer implements Renderer {
 		// Rotar el modelo con la rotación acumulada
 		multiplyMM(tempMatrix, 0, modelMatrix, 0, totalRotationMatrix, 0);
 		System.arraycopy(tempMatrix, 0, modelMatrix, 0, 16);
+
+		// Movemos el modelo en el eje Y
+		translateM(modelMatrix, 0, 0, pY, 0);
+
+		// Rotamos el modelo sobre sí mismo en el eje Y
+		rotateM(modelMatrix, 0, pRy, 0.0f, 1.0f, 0.0f);
 
 		// Multiplicamos la matriz de proyección por la del modelo
 		multiplyMM(MVP, 0, projectionMatrix, 0, modelMatrix, 0);
@@ -334,31 +347,31 @@ public class OpenGLRenderer implements Renderer {
 		// Env?a la matriz modelMatrix al shader
 		glUniformMatrix4fv(uMVMatrixLocation, 1, false, modelMatrix, 0);
 		// Actualizamos el color (Marr?n)
-		//glUniform4f(uColorLocation, 0.78f, 0.49f, 0.12f, 1.0f); 
-		glUniform4f(uColorLocation, 1.0f, 1.0f, 1.0f, 1.0f); 
-			
+		//glUniform4f(uColorLocation, 0.78f, 0.49f, 0.12f, 1.0f);
+		glUniform4f(uColorLocation, 1.0f, 1.0f, 1.0f, 1.0f);
+
 		// Pasamos la textura
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture);
+		glBindTexture(GL_TEXTURE_2D, pTexture);
 		glUniform1f(uTextureUnitLocation, 0);
-		
+
 		// Dibujamos el objeto
-		for (int i=0; i<obj3DS.numMeshes; i++) {
+		for (int i = 0; i< pObj3DS.numMeshes; i++) {
 			// Asociando vértices con su attribute
-			final Buffer position = obj3DS.dataBuffer[i].position(0);
+			final Buffer position = pObj3DS.dataBuffer[i].position(0);
 			glVertexAttribPointer(aPositionLocation, POSITION_COMPONENT_COUNT, GL_FLOAT,
-					false, STRIDE, obj3DS.dataBuffer[i]);
-			
+					false, STRIDE, pObj3DS.dataBuffer[i]);
+
 			// Asociamos el vector de normales
-			obj3DS.dataBuffer[i].position(POSITION_COMPONENT_COUNT);
+			pObj3DS.dataBuffer[i].position(POSITION_COMPONENT_COUNT);
 			glVertexAttribPointer(aNormalLocation, NORMAL_COMPONENT_COUNT, GL_FLOAT,
-					false, STRIDE, obj3DS.dataBuffer[i]);
-			
+					false, STRIDE, pObj3DS.dataBuffer[i]);
+
 			// Asociamos el vector de UVs
-			obj3DS.dataBuffer[i].position(POSITION_COMPONENT_COUNT+NORMAL_COMPONENT_COUNT);
+			pObj3DS.dataBuffer[i].position(POSITION_COMPONENT_COUNT+NORMAL_COMPONENT_COUNT);
 			glVertexAttribPointer(aUVLocation, NORMAL_COMPONENT_COUNT, GL_FLOAT,
-					false, STRIDE, obj3DS.dataBuffer[i]);
-			glDrawArrays(GL_TRIANGLES, 0, obj3DS.numVertices[i]);
+					false, STRIDE, pObj3DS.dataBuffer[i]);
+			glDrawArrays(GL_TRIANGLES, 0, pObj3DS.numVertices[i]);
 		}
 	}
 
