@@ -51,6 +51,8 @@ import static android.opengl.Matrix.translateM;
 
 public class OpenGLRenderer implements Renderer {
 	private static final String TAG = "OpenGLRenderer";
+	private static final float MAX_Z = -1f;
+	private static final float MIN_Z = -50f;
 	
 	// Para paralela
 	//private static final float TAM = 1.0f;
@@ -398,6 +400,7 @@ public class OpenGLRenderer implements Renderer {
 
 	public void handleTouchScale(float scaleFactor) {
         mZPos /= scaleFactor;
+		mZPos = Math.max(Math.min(mZPos, MAX_Z), MIN_Z);
     }
 
     public void handleTouchRotation(float angle) {
