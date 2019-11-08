@@ -8,6 +8,7 @@ import com.japg.mastermoviles.opengl10.util.LoggerConfig;
 import com.japg.mastermoviles.opengl10.util.Resource3DSReader;
 import com.japg.mastermoviles.opengl10.util.ShaderHelper;
 import com.japg.mastermoviles.opengl10.util.TextResourceReader;
+import com.japg.mastermoviles.opengl10.util.TextureHelper;
 
 import java.nio.Buffer;
 
@@ -82,6 +83,7 @@ public class OpenGLRenderer implements Renderer {
 	private int aUVLocation;
 	
 	private int	texture;
+	private int texture2;
 	
 	// Rotación alrededor de los ejes
 	private float rotationDeltaX = 0f;
@@ -202,7 +204,7 @@ public class OpenGLRenderer implements Renderer {
 		
 		// Lee un archivos 3DS desde un recurso
 		obj3DS1 = new Resource3DSReader();
-		obj3DS1.read3DSFromResource(context, R.raw.torus);
+		obj3DS1.read3DSFromResource(context, R.raw.mono);
 
 		obj3DS2 = new Resource3DSReader();
 		obj3DS2.read3DSFromResource(context, R.raw.mono);
@@ -229,7 +231,8 @@ public class OpenGLRenderer implements Renderer {
 			Log.w(TAG, "Max. Texture Image Units: "+maxTextureImageUnits[0]);
 		}
 		// Cargamos la textura desde los recursos
-		// TODO: texture = TextureHelper.loadTexture(context, R.drawable.mono_tex);
+		texture  = TextureHelper.loadTexture(context, R.drawable.mono_tex);
+		texture2 = TextureHelper.loadTexture(context, R.drawable.mono_tex_2);
 		
 		// Leemos los shaders
 		if (maxVertexTextureImageUnits[0]>0) {
@@ -311,8 +314,8 @@ public class OpenGLRenderer implements Renderer {
 		glLineWidth(2.0f);
 
 		// Dibujamos los objetos
-		draw3DSObject(obj3DS1, texture, +1, m2ndObjectRotationZ);
-		draw3DSObject(obj3DS2, texture, -1, 0);
+		draw3DSObject(obj3DS1, texture,   0.75f, m2ndObjectRotationZ);
+		draw3DSObject(obj3DS2, texture2, -0.75f, 0);
 	}
 
 	private void draw3DSObject(Resource3DSReader pObj3DS, int pTexture, float pY, float pRy) {
