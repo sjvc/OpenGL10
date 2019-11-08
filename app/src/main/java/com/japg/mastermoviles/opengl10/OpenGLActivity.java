@@ -7,26 +7,21 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.GestureDetector;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GestureDetectorCompat;
-
 import com.japg.mastermoviles.opengl10.util.RotationGestureDetector;
 
 
-public class OpenGLActivity extends AppCompatActivity implements GestureDetector.OnGestureListener, ScaleGestureDetector.OnScaleGestureListener, RotationGestureDetector.OnRotationGestureListener, SensorEventListener {
+public class OpenGLActivity extends AppCompatActivity implements GestureDetector.OnGestureListener, ScaleGestureDetector.OnScaleGestureListener, RotationGestureDetector.OnRotationGestureListener, SwipeView.OnSwipeListener, SensorEventListener {
     private OpenGLSurfaceView glSurfaceView;
     private OpenGLRenderer mOpenGLRenderer;
     private boolean rendererSet = false;
@@ -35,6 +30,7 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
     private GestureDetectorCompat mGestureDetector;
     private ScaleGestureDetector mScaleGestureDetector;
     private RotationGestureDetector mRotationGestureDetector;
+    private SwipeView mSwipeView;
 
     private SensorManager mSensorManager;
     private Sensor mGyroscopeSensor;
@@ -43,6 +39,8 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        setContentView(R.layout.activity_opengl);
+
         mGestureDetector = new GestureDetectorCompat(this, this);
         mScaleGestureDetector = new ScaleGestureDetector(this, this);
         mRotationGestureDetector = new RotationGestureDetector(this);
@@ -50,7 +48,10 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mGyroscopeSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
-        glSurfaceView = new OpenGLSurfaceView(this);
+        mSwipeView = findViewById(R.id.swipeView);
+        mSwipeView.setOnSwipeListener(this);
+
+        glSurfaceView = findViewById(R.id.openGLSurfaceView);
         mOpenGLRenderer = new OpenGLRenderer(this);
         final ActivityManager activityManager =
                 (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -95,8 +96,6 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
                 return retVal;
             }
         });
-
-        setContentView(glSurfaceView);
     }
 
     @Override
@@ -197,6 +196,20 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
+    }
+
+    @Override
+    public boolean onSwipeEvent(float distanceX, float distanceY) {
+        final float normDistX = distanceX / (float)mSwipeView.getWidth();
+
+        glSurfaceView.queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                mOpenGLRenderer.handleSwipe(normDistX);
+            }
+        });
+
+        return true;
     }
 
     @Override

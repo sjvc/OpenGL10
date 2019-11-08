@@ -90,6 +90,9 @@ public class OpenGLRenderer implements Renderer {
 
 	// Posición Z
     private float mZPos = -4f;
+
+    // Rotación Z del segundo objeto
+	private float m2ndObjectRotationZ = 0;
 	
 	private static final int POSITION_COMPONENT_COUNT = 3;
 	private static final int NORMAL_COMPONENT_COUNT = 3;
@@ -308,10 +311,10 @@ public class OpenGLRenderer implements Renderer {
 		glLineWidth(2.0f);
 
 		// Dibujamos los objetos
-		draw3DSObject(obj3DS1, texture, +1, temp++);
+		draw3DSObject(obj3DS1, texture, +1, m2ndObjectRotationZ);
 		draw3DSObject(obj3DS2, texture, -1, 0);
 	}
-private float temp;
+
 	private void draw3DSObject(Resource3DSReader pObj3DS, int pTexture, float pY, float pRy) {
 		/*
 		Hemos de leer las transformaciones que hagamos de abajo a arriba.
@@ -401,5 +404,9 @@ private float temp;
     public void handleGyroscopeRotation(float x, float y) {
 		rotationDeltaX = -x;
 		rotationDeltaY = -y;
+	}
+
+	public void handleSwipe(float normDistX) {
+		m2ndObjectRotationZ -= normDistX * 180f;
 	}
 }
