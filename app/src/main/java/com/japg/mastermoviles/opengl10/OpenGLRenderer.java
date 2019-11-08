@@ -409,4 +409,8 @@ public class OpenGLRenderer implements Renderer {
 	public void handleSwipe(float normDistX) {
 		m2ndObjectRotationZ -= normDistX * 180f;
 	}
+
+	public float get2ndObjectRotationZ() {
+		return m2ndObjectRotationZ;
+	}
 }

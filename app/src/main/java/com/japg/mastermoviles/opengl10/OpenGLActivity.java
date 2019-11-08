@@ -96,6 +96,9 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
                 return retVal;
             }
         });
+
+        mSwipeView.setInstructionsText("Desliza el dedo para rotar"); // TODO: Desliza el dedo para rotar... ¿el qué?
+        updateSwipeViewText(0);
     }
 
     @Override
@@ -206,6 +209,7 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
             @Override
             public void run() {
                 mOpenGLRenderer.handleSwipe(normDistX);
+                updateSwipeViewText((int)mOpenGLRenderer.get2ndObjectRotationZ());
             }
         });
 
@@ -236,5 +240,16 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
         if (rendererSet) {
             glSurfaceView.onResume();
         }
+    }
+
+    private void updateSwipeViewText(final int rotation) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                int r = rotation % 360;
+                if (r < 0) r = 360 - Math.abs(r);
+                mSwipeView.setText(r + "º");
+            }
+        });
     }
 }
