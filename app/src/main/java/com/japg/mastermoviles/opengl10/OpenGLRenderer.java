@@ -51,8 +51,8 @@ import static android.opengl.Matrix.translateM;
 
 public class OpenGLRenderer implements Renderer {
 	private static final String TAG = "OpenGLRenderer";
-	private static final float MAX_Z = -1f;
-	private static final float MIN_Z = -50f;
+	private static final float MAX_Z = -1.5f;
+	private static final float MIN_Z = -70f;
 	
 	// Para paralela
 	//private static final float TAM = 1.0f;
@@ -93,7 +93,7 @@ public class OpenGLRenderer implements Renderer {
 	private float rotationDeltaZ = 0f;
 
 	// Posición Z
-    private float mZPos = -4f;
+    private float mZPos = -7f;
 
     // Rotación Z del segundo objeto
 	private float m2ndObjectRotationZ = 0;
@@ -206,10 +206,10 @@ public class OpenGLRenderer implements Renderer {
 		
 		// Lee un archivos 3DS desde un recurso
 		obj3DS1 = new Resource3DSReader();
-		obj3DS1.read3DSFromResource(context, R.raw.mono);
+		obj3DS1.read3DSFromResource(context, R.raw.r2d2_head);
 
 		obj3DS2 = new Resource3DSReader();
-		obj3DS2.read3DSFromResource(context, R.raw.mono);
+		obj3DS2.read3DSFromResource(context, R.raw.r2d2_body);
 	}
 	
 	@Override
@@ -316,8 +316,8 @@ public class OpenGLRenderer implements Renderer {
 		glLineWidth(2.0f);
 
 		// Dibujamos los objetos
-		draw3DSObject(obj3DS1, texture,   0.75f, m2ndObjectRotationZ);
-		draw3DSObject(obj3DS2, texture2, -0.75f, 0);
+		draw3DSObject(obj3DS1, 0/*texture*/,   0f, m2ndObjectRotationZ);
+		draw3DSObject(obj3DS2, 0/*texture2*/,  0f, 0);
 	}
 
 	private void draw3DSObject(Resource3DSReader pObj3DS, int pTexture, float pY, float pRy) {
