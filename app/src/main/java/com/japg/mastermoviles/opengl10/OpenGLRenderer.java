@@ -326,7 +326,7 @@ public class OpenGLRenderer implements Renderer {
 		De esta forma:
 			- 1º rotamos el modelo sobre el eje Y. Como está en (0,0,0), rotará sobre sí mismo.
 			- 2º movemos el modelo en el eje Y
-			- 3º rotamos el modelo en todos los ejes. Como está en (0, X, 0), el objeto rotará "orbitando" el punto (0, 0, 0)
+			- 3º rotamos el modelo en todos los ejes. El objeto rotará "orbitando" el punto (0, 0, 0)
 			- 4º movemos el modelo en el eje Z
 		 */
 
