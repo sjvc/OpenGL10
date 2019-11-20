@@ -6,7 +6,7 @@ attribute vec4 a_Position;			// in: Posición de cada vértice
 attribute vec3 a_Normal;			// in: Normal de cada vértice
 attribute vec2 a_UV;				// in: Coordenadas UV de mapeado de textura
 
-varying vec2 v_TexCoordinate;       // out: This will be passed into the fragment shader.
+varying vec2 v_UV;                  // out: Coordenadas UV de mapeado de textura para el fragment
 
 void main()
 {
@@ -45,8 +45,8 @@ void main()
 
 	// v_Color += attenuation*(u_Color*texture2D(u_TextureUnit, a_UV)*diffuse + specularColor*specular);
 
-    // Pass through the texture coordinate.
-    v_TexCoordinate = a_UV;
+    // Pasar la coordenada de la textura al fragment shader
+    v_UV = a_UV;
 
 	gl_Position = u_MVPMatrix * a_Position;
 }
