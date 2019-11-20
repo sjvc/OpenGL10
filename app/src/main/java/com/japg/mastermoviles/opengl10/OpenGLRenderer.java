@@ -240,9 +240,9 @@ public class OpenGLRenderer implements Renderer {
 		if (maxVertexTextureImageUnits[0]>0) {
 			// Textura soportada en el vertex shader
 			vertexShaderSource = TextResourceReader
-				.readTextFileFromResource(context, R.raw.specular_vertex_shader);
+				.readTextFileFromResource(context, R.raw.specular_vertex_shader_sergio);
 			fragmentShaderSource = TextResourceReader
-				.readTextFileFromResource(context, R.raw.specular_fragment_shader);
+				.readTextFileFromResource(context, R.raw.specular_fragment_shader_sergio);
 		} else {
 			// Textura no soportada en el vertex shader
 			vertexShaderSource = TextResourceReader
