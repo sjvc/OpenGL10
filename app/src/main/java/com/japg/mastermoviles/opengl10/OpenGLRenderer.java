@@ -233,8 +233,8 @@ public class OpenGLRenderer implements Renderer {
 			Log.w(TAG, "Max. Texture Image Units: "+maxTextureImageUnits[0]);
 		}
 		// Cargamos la textura desde los recursos
-		texture  = TextureHelper.loadTexture(context, R.drawable.mono_tex);
-		texture2 = TextureHelper.loadTexture(context, R.drawable.mono_tex_2);
+		texture  = TextureHelper.loadTexture(context, R.drawable.r2d2_head);
+		texture2 = TextureHelper.loadTexture(context, R.drawable.r2d2_body);
 		
 		// Leemos los shaders
 		if (maxVertexTextureImageUnits[0]>0) {
@@ -316,8 +316,8 @@ public class OpenGLRenderer implements Renderer {
 		glLineWidth(2.0f);
 
 		// Dibujamos los objetos
-		draw3DSObject(obj3DS1, 0/*texture*/,   0f, m2ndObjectRotationZ);
-		draw3DSObject(obj3DS2, 0/*texture2*/,  0f, 0);
+		draw3DSObject(obj3DS1, texture,   0f, m2ndObjectRotationZ);
+		draw3DSObject(obj3DS2, texture2,  0f, 0);
 	}
 
 	private void draw3DSObject(Resource3DSReader pObj3DS, int pTexture, float pY, float pRy) {
