@@ -233,8 +233,8 @@ public class OpenGLRenderer implements Renderer {
 			Log.w(TAG, "Max. Texture Image Units: "+maxTextureImageUnits[0]);
 		}
 		// Cargamos la textura desde los recursos
-		texture  = TextureHelper.loadTexture(context, R.drawable.r2d2_head);
-		texture2 = TextureHelper.loadTexture(context, R.drawable.r2d2_body);
+		texture  = TextureHelper.loadTexture(context, R.drawable.r2d2_head_tex);
+		texture2 = TextureHelper.loadTexture(context, R.drawable.r2d2_body_tex);
 		
 		// Leemos los shaders
 		if (maxVertexTextureImageUnits[0]>0) {
@@ -386,7 +386,7 @@ public class OpenGLRenderer implements Renderer {
 
 			// Asociamos el vector de UVs
 			pObj3DS.dataBuffer[i].position(POSITION_COMPONENT_COUNT+NORMAL_COMPONENT_COUNT);
-			glVertexAttribPointer(aUVLocation, NORMAL_COMPONENT_COUNT, GL_FLOAT,
+			glVertexAttribPointer(aUVLocation, UV_COMPONENT_COUNT, GL_FLOAT,
 					false, STRIDE, pObj3DS.dataBuffer[i]);
 			glDrawArrays(GL_TRIANGLES, 0, pObj3DS.numVertices[i]);
 		}

@@ -76,8 +76,8 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
         if (supportsEs2) {
             // Request an OpenGL ES 2.0 compatible context.
             glSurfaceView.setEGLContextClientVersion(2);
-            // Para que funcione en el emulador
-            glSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
+            // Configuración (he ampliado el depth buffer a 24 para que se vea bien)
+            glSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 24, 0);
             // Asigna nuestro renderer.
             glSurfaceView.setRenderer(mOpenGLRenderer);
             rendererSet = true;
