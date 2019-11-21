@@ -7,6 +7,7 @@ attribute vec3 a_Normal;			// in: Normal de cada vértice
 attribute vec2 a_UV;				// in: Coordenadas UV de mapeado de textura
 
 varying vec2 v_UV;                  // out: Coordenadas UV de mapeado de textura para el fragment
+varying vec4 v_Color;				// out: Color de salida al fragment shader
 
 void main()
 {
@@ -30,7 +31,7 @@ void main()
 	float diffuse  = max(dot(N, L), 0.0);					// Cálculo de la intensidad difusa
 	float specular = pow(max(dot(V, R), 0.0), 200.0);		// Exponente de Phong (200)
 		
-	// v_Color = u_Color*ambient+attenuation*(u_Color*texture2D(u_TextureUnit, a_UV)*diffuse + specularColor*specular);
+	v_Color = u_Color*ambient+attenuation*(u_Color*diffuse + specularColor*specular);
 	
 	// Segunda Luz
 	d = length(P - LightPos1);								// distancia
@@ -43,7 +44,7 @@ void main()
 	diffuse  = max(dot(N, L), 0.0);							// Cálculo de la intensidad difusa
 	specular = pow(max(dot(V, R), 0.0), 200.0);				// Exponente de Phong (200)
 
-	// v_Color += attenuation*(u_Color*texture2D(u_TextureUnit, a_UV)*diffuse + specularColor*specular);
+	v_Color += attenuation*(u_Color*diffuse + specularColor*specular);
 
     // Pasar la coordenada de la textura al fragment shader
     v_UV = a_UV;
