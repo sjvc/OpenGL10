@@ -11,7 +11,7 @@ varying vec4 v_Color;				// out: Color de salida al fragment shader
 
 void main()
 {
-	float ambient  = 0.15;									// 15% de intensidad ambiente
+	float ambient  = 0.4;									// 15% de intensidad ambiente
 	vec4  specularColor = vec4(1, 1, 1, 1);					// Color especular (brillos blancos)
 	
 	vec3 LightPos0 = vec3( 2,  5, 3);						// Posición de la luz 0 [fija]
