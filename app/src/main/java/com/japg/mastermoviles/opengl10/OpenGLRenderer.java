@@ -84,9 +84,6 @@ public class OpenGLRenderer implements Renderer {
 	private int aNormalLocation;
 	private int aUVLocation;
 	
-	private int	texture;
-	private int texture2;
-	
 	// Rotación alrededor de los ejes
 	private float rotationDeltaX = 0f;
 	private float rotationDeltaY = 0f;
@@ -115,8 +112,33 @@ public class OpenGLRenderer implements Renderer {
 	private final float[] totalRotationMatrix = new float[16];
 	private final float[] tempMatrix = new float[16];
 
-	private Resource3DSReader obj3DS1;
-	private Resource3DSReader obj3DS2;
+	private Resource3DSReader r2d2Head3DSObject;
+	private Resource3DSReader r2d2Body3DSObject;
+
+	// Texturas para la cabeza
+	private int[] r2d2HeadTextureFrames = {
+		R.drawable.r2d2_head_tex, R.drawable.r2d2_head_tex, R.drawable.r2d2_head_tex2, R.drawable.r2d2_head_tex2,
+		R.drawable.r2d2_head_tex, R.drawable.r2d2_head_tex, R.drawable.r2d2_head_tex2, R.drawable.r2d2_head_tex2,
+		R.drawable.r2d2_head_tex, R.drawable.r2d2_head_tex, R.drawable.r2d2_head_tex2, R.drawable.r2d2_head_tex2,
+		R.drawable.r2d2_head_tex, R.drawable.r2d2_head_tex, R.drawable.r2d2_head_tex2, R.drawable.r2d2_head_tex2,
+		R.drawable.r2d2_head_tex, R.drawable.r2d2_head_tex, R.drawable.r2d2_head_tex3, R.drawable.r2d2_head_tex2,
+	};
+
+	// Colores para el modo discoteca [index][0=R, 1=G, 2=B]
+	private int[][] discoColors = {
+		new int[]{0x21, 0x96, 0xf3},
+		new int[]{0xf4, 0x43, 0x36},
+		new int[]{0xff, 0xeb, 0x3b},
+		new int[]{0x4c, 0xaf, 0x50},
+		new int[]{0x9c, 0x27, 0xb0},
+		new int[]{0xff, 0x98, 0x00},
+		new int[]{0xcd, 0xdc, 0x39},
+		new int[]{0x00, 0xbc, 0xd4},
+		new int[]{0xe9, 0x1e, 0x63}
+	};
+
+	// Textura para el cuerpo
+	private int r2d2BodyTexture;
 	
 	float[] tablaVertices = {
 		// Abanico de triángulos, x, y, R, G, B
@@ -205,19 +227,19 @@ public class OpenGLRenderer implements Renderer {
 		this.context = context;
 		
 		// Lee un archivos 3DS desde un recurso
-		obj3DS1 = new Resource3DSReader();
-		obj3DS1.read3DSFromResource(context, R.raw.r2d2_head);
+		r2d2Head3DSObject = new Resource3DSReader();
+		r2d2Head3DSObject.read3DSFromResource(context, R.raw.r2d2_head);
 
-		obj3DS2 = new Resource3DSReader();
-		obj3DS2.read3DSFromResource(context, R.raw.r2d2_body);
+		r2d2Body3DSObject = new Resource3DSReader();
+		r2d2Body3DSObject.read3DSFromResource(context, R.raw.r2d2_body);
 	}
 	
 	@Override
 	public void onSurfaceCreated(GL10 glUnused, EGLConfig config) {
 		String vertexShaderSource;
 		String fragmentShaderSource;
-			
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+		glClearColor(0f, 0f, 0f, 1f);
 		
 		int[]	maxVertexTextureImageUnits = new int[1];
 		int[]	maxTextureImageUnits       = new int[1];
@@ -233,16 +255,18 @@ public class OpenGLRenderer implements Renderer {
 			Log.w(TAG, "Max. Texture Image Units: "+maxTextureImageUnits[0]);
 		}
 		// Cargamos la textura desde los recursos
-		texture  = TextureHelper.loadTexture(context, R.drawable.r2d2_head_tex);
-		texture2 = TextureHelper.loadTexture(context, R.drawable.r2d2_body_tex);
+		r2d2BodyTexture = TextureHelper.loadTexture(context, R.drawable.r2d2_body_tex);
+		for (int i=0; i<r2d2HeadTextureFrames.length; i++) {
+			r2d2HeadTextureFrames[i] = TextureHelper.loadTexture(context, r2d2HeadTextureFrames[i]);
+		}
 		
 		// Leemos los shaders
 		if (maxVertexTextureImageUnits[0]>0) {
 			// Textura soportada en el vertex shader
 			vertexShaderSource = TextResourceReader
-				.readTextFileFromResource(context, R.raw.sergio_phong_vertex_shader);
+				.readTextFileFromResource(context, R.raw.sergio_goraud_vertex_shader);
 			fragmentShaderSource = TextResourceReader
-				.readTextFileFromResource(context, R.raw.sergio_phong_fragment_shader);
+				.readTextFileFromResource(context, R.raw.sergio_goraud_fragment_shader);
 		} else {
 			// Textura no soportada en el vertex shader
 			vertexShaderSource = TextResourceReader
@@ -316,8 +340,8 @@ public class OpenGLRenderer implements Renderer {
 		glLineWidth(2.0f);
 
 		// Dibujamos los objetos
-		draw3DSObject(obj3DS1, texture,   0f, m2ndObjectRotationZ);
-		draw3DSObject(obj3DS2, texture2,  0f, 0);
+		draw3DSObject(r2d2Head3DSObject, r2d2HeadTextureFrames[getFrameIndex(250, r2d2HeadTextureFrames.length)],   0f, m2ndObjectRotationZ);
+		draw3DSObject(r2d2Body3DSObject, r2d2BodyTexture,  0f, 0);
 	}
 
 	private void draw3DSObject(Resource3DSReader pObj3DS, int pTexture, float pY, float pRy) {
@@ -363,9 +387,9 @@ public class OpenGLRenderer implements Renderer {
 		glUniformMatrix4fv(uMVPMatrixLocation, 1, false, MVP, 0);
 		// Env?a la matriz modelMatrix al shader
 		glUniformMatrix4fv(uMVMatrixLocation, 1, false, modelMatrix, 0);
-		// Actualizamos el color (Marr?n)
-		//glUniform4f(uColorLocation, 0.78f, 0.49f, 0.12f, 1.0f);
-		glUniform4f(uColorLocation, 1.0f, 1.0f, 1.0f, 1.0f);
+		// Actualizamos el color
+		int[] color = discoColors[ getFrameIndex(370, discoColors.length) ]; // 370 = (1 / 162 BPM) * 60 * 1000
+		glUniform4f(uColorLocation, color[0] / 256f, color[1] / 256f, color[2] / 256f, 1.0f);
 
 		// Pasamos la textura
 		glActiveTexture(GL_TEXTURE0);
@@ -390,6 +414,10 @@ public class OpenGLRenderer implements Renderer {
 					false, STRIDE, pObj3DS.dataBuffer[i]);
 			glDrawArrays(GL_TRIANGLES, 0, pObj3DS.numVertices[i]);
 		}
+	}
+
+	private int getFrameIndex(int frameDurationMillis, int frameCount) {
+		return (int)((System.currentTimeMillis() / frameDurationMillis) % frameCount);
 	}
 
 	
