@@ -21,6 +21,8 @@ import android.view.WindowManager;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GestureDetectorCompat;
+
+import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.japg.mastermoviles.opengl10.util.RotationGestureDetector;
 
 
@@ -34,11 +36,14 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
     private ScaleGestureDetector mScaleGestureDetector;
     private RotationGestureDetector mRotationGestureDetector;
     private SwipeView mSwipeView;
+    private FloatingActionsMenu mFloatingActionsMenu;
 
     private SensorManager mSensorManager;
     private Sensor mGyroscopeSensor;
 
     private Display mDisplay;
+
+    private boolean mUseGyroscope = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +60,8 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
 
         mSwipeView = findViewById(R.id.swipeView);
         mSwipeView.setOnSwipeListener(this);
+
+        mFloatingActionsMenu = findViewById(R.id.fabMenu);
 
         mDisplay = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
 
@@ -188,7 +195,7 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if (isTouchingScreen || event.sensor.getType() != Sensor.TYPE_GYROSCOPE){
+        if (!mUseGyroscope || isTouchingScreen || event.sensor.getType() != Sensor.TYPE_GYROSCOPE){
             return;
         }
 
@@ -278,5 +285,21 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
                 mSwipeView.setText(r + "º");
             }
         });
+    }
+
+    public void onToggleGyroscopeButtonClick(View v) {
+        mFloatingActionsMenu.collapse();
+
+        mUseGyroscope = !mUseGyroscope;
+
+        Toast.makeText(this, "Giroscopio " + (!mUseGyroscope ? "des" : "") + "activado", Toast.LENGTH_SHORT).show();
+    }
+
+    public void onToggleDiscoModeButtonClick(View v) {
+        mFloatingActionsMenu.collapse();
+
+        boolean activado = mOpenGLRenderer.toggleDiscoMode();
+
+        Toast.makeText(this, "Modo discoteca " + (!activado ? "des" : "") + "activado", Toast.LENGTH_SHORT).show();
     }
 }

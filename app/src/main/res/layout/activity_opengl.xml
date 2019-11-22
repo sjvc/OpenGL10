@@ -1,13 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+    xmlns:fab="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.japg.mastermoviles.opengl10.OpenGLSurfaceView
-        android:id="@+id/openGLSurfaceView"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="1">
+
+        <com.japg.mastermoviles.opengl10.OpenGLSurfaceView
+            android:id="@+id/openGLSurfaceView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <com.getbase.floatingactionbutton.FloatingActionsMenu
+            android:id="@+id/fabMenu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/fab_margin"
+            android:layout_gravity="top|right"
+            fab:fab_expandDirection="down"
+            fab:fab_addButtonColorNormal="@color/colorPrimary"
+            fab:fab_addButtonColorPressed="@color/colorPrimaryDark"
+            fab:fab_labelStyle="@style/fab_menu_labels_style">
+
+            <com.getbase.floatingactionbutton.FloatingActionButton
+                fab:fab_icon="@drawable/ic_rotate_orbit"
+                android:id="@+id/gyroscopeFab"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onToggleGyroscopeButtonClick"
+                fab:fab_title="@string/activateGyroscope"
+                fab:fab_colorNormal="@color/colorPrimary"
+                fab:fab_colorPressed="@color/colorPrimaryDark" />
+
+            <com.getbase.floatingactionbutton.FloatingActionButton
+                fab:fab_icon="@drawable/ic_party_popper"
+                android:id="@+id/discoFab"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onToggleDiscoModeButtonClick"
+                fab:fab_title="@string/activateDiscoMode"
+                fab:fab_colorNormal="@color/colorPrimary"
+                fab:fab_colorPressed="@color/colorPrimaryDark"  />
+        </com.getbase.floatingactionbutton.FloatingActionsMenu>
+
+    </FrameLayout>
 
     <com.japg.mastermoviles.opengl10.SwipeView
         android:id="@+id/swipeView"

@@ -368,8 +368,6 @@ public class OpenGLRenderer implements Renderer {
 				perspective(projectionMatrix, 0, 45f, 1f/aspectRatio, 0.01f, 1000f);
 				//frustum(projectionMatrix, 0, -TAM, TAM, -aspectRatio*TAM, aspectRatio*TAM, 1f, 1000.0f);
 		}
-
-		setDiscoMode(false); //TODO:
 	}
 	
 	@Override
@@ -482,12 +480,14 @@ public class OpenGLRenderer implements Renderer {
 		return (int)(((System.currentTimeMillis() - startedAt) / frameDurationMillis) % frameCount);
 	}
 
-	private void setDiscoMode(boolean value) {
-		mDiscoMode = value;
+	public boolean toggleDiscoMode() {
+		mDiscoMode = !mDiscoMode;
 
 		if (mDiscoMode) {
 			mDiscoStartedAt = System.currentTimeMillis();
 		}
+
+		return mDiscoMode;
 	}
 	
 	public void handleTouchScroll(float normDistX, float normDistY) {
