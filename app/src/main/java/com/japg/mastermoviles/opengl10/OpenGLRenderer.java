@@ -116,7 +116,8 @@ public class OpenGLRenderer implements Renderer {
 	private Resource3DSReader r2d2Body3DSObject;
 
 	// Texturas para la cabeza
-	private int[] r2d2HeadTextureFrames = {
+    private int[] r2d2HeadTextureFrames;
+	private int[] r2d2HeadTextureIds = {
 		R.drawable.r2d2_head_tex, R.drawable.r2d2_head_tex, R.drawable.r2d2_head_tex2, R.drawable.r2d2_head_tex2,
 		R.drawable.r2d2_head_tex, R.drawable.r2d2_head_tex, R.drawable.r2d2_head_tex2, R.drawable.r2d2_head_tex2,
 		R.drawable.r2d2_head_tex, R.drawable.r2d2_head_tex, R.drawable.r2d2_head_tex2, R.drawable.r2d2_head_tex2,
@@ -256,8 +257,9 @@ public class OpenGLRenderer implements Renderer {
 		}
 		// Cargamos la textura desde los recursos
 		r2d2BodyTexture = TextureHelper.loadTexture(context, R.drawable.r2d2_body_tex);
+        r2d2HeadTextureFrames = new int[r2d2HeadTextureIds.length];
 		for (int i=0; i<r2d2HeadTextureFrames.length; i++) {
-			r2d2HeadTextureFrames[i] = TextureHelper.loadTexture(context, r2d2HeadTextureFrames[i]);
+			r2d2HeadTextureFrames[i] = TextureHelper.loadTexture(context, r2d2HeadTextureIds[i]);
 		}
 		
 		// Leemos los shaders
