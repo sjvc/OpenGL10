@@ -37,6 +37,7 @@ import static android.opengl.GLES20.glGetIntegerv;
 import static android.opengl.GLES20.glGetUniformLocation;
 import static android.opengl.GLES20.glLineWidth;
 import static android.opengl.GLES20.glUniform1f;
+import static android.opengl.GLES20.glUniform3f;
 import static android.opengl.GLES20.glUniform4f;
 import static android.opengl.GLES20.glUniformMatrix4fv;
 import static android.opengl.GLES20.glUseProgram;
@@ -53,6 +54,10 @@ public class OpenGLRenderer implements Renderer {
 	private static final String TAG = "OpenGLRenderer";
 	private static final float MAX_Z = -1.5f;
 	private static final float MIN_Z = -70f;
+
+	private static final int   HEAD_ANIMATION_FRAME_DURATION = 250;
+	private static final float DISCO_MUSIC_BPM = 162.0f;
+	private static final int   DISCO_LIGHT_DURATION = (int)((1 / DISCO_MUSIC_BPM) * 60 * 1000);
 	
 	// Para paralela
 	//private static final float TAM = 1.0f;
@@ -69,6 +74,8 @@ public class OpenGLRenderer implements Renderer {
 	private static final String U_MVMATRIX 			= "u_MVMatrix";
 	private static final String U_COLOR 			= "u_Color";
 	private static final String U_TEXTURE 			= "u_TextureUnit";
+	private static final String U_LIGHT_POS0        = "u_LightPos0";
+	private static final String U_LIGHT_POS1        = "u_LightPos1";
 
 	// Nombre de los attribute
 	private static final String A_POSITION = "a_Position";
@@ -83,6 +90,8 @@ public class OpenGLRenderer implements Renderer {
 	private int aPositionLocation;
 	private int aNormalLocation;
 	private int aUVLocation;
+	private int uLightPos0Location;
+	private int uLightPos1Location;
 	
 	// Rotación alrededor de los ejes
 	private float rotationDeltaX = 0f;
@@ -137,6 +146,36 @@ public class OpenGLRenderer implements Renderer {
 		new int[]{0x00, 0xbc, 0xd4},
 		new int[]{0xe9, 0x1e, 0x63}
 	};
+
+	// Posiciones de la luz 1 para el modo discoteca [index] [0=x, 1=y, 2=z]
+	private float[][] discoLights0 = {
+		new float[]{-8,  5,  3},
+		new float[]{-4,  5,  3},
+		new float[]{-2,  5,  3},
+		new float[]{ 0,  5,  3},
+		new float[]{ 2,  5,  3}, //
+		new float[]{ 4,  5,  3},
+		new float[]{ 6,  5,  3},
+		new float[]{ 7,  5,  3},
+		new float[]{ 8,  5,  3},
+	};
+
+	// Posiciones de la luz 2 para el modo discoteca [index] [0=x, 1=y, 2=z]
+	private float[][] discoLights1 = {
+		new float[]{  4, -5,  3},
+		new float[]{  2, -5,  3},
+		new float[]{  0, -5,  3},
+		new float[]{- 2, -5,  3},
+		new float[]{- 4, -5,  3}, //
+		new float[]{- 6, -5,  3},
+		new float[]{- 8, -5,  3},
+		new float[]{-10, -5,  3},
+		new float[]{-12, -5,  3}
+	};
+
+	// ¿Modo discoteca activo?
+	boolean mDiscoMode = false;
+	long mDiscoStartedAt = 0;
 
 	// Textura para el cuerpo
 	private int r2d2BodyTexture;
@@ -297,6 +336,8 @@ public class OpenGLRenderer implements Renderer {
 		uMVMatrixLocation = glGetUniformLocation(program, U_MVMATRIX);
 		uColorLocation = glGetUniformLocation(program, U_COLOR);
 		uTextureUnitLocation = glGetUniformLocation(program, U_TEXTURE);
+		uLightPos0Location = glGetUniformLocation(program, U_LIGHT_POS0);
+		uLightPos1Location = glGetUniformLocation(program, U_LIGHT_POS1);
 		
 		// Capturamos los attributes
 		aPositionLocation = glGetAttribLocation(program, A_POSITION);
@@ -327,6 +368,8 @@ public class OpenGLRenderer implements Renderer {
 				perspective(projectionMatrix, 0, 45f, 1f/aspectRatio, 0.01f, 1000f);
 				//frustum(projectionMatrix, 0, -TAM, TAM, -aspectRatio*TAM, aspectRatio*TAM, 1f, 1000.0f);
 		}
+
+		setDiscoMode(false); //TODO:
 	}
 	
 	@Override
@@ -342,7 +385,8 @@ public class OpenGLRenderer implements Renderer {
 		glLineWidth(2.0f);
 
 		// Dibujamos los objetos
-		draw3DSObject(r2d2Head3DSObject, r2d2HeadTextureFrames[getFrameIndex(250, r2d2HeadTextureFrames.length)],   0f, m2ndObjectRotationZ);
+		int r2d2HeadTexture = r2d2HeadTextureFrames[getFrameIndex(HEAD_ANIMATION_FRAME_DURATION, r2d2HeadTextureFrames.length, 0)];
+		draw3DSObject(r2d2Head3DSObject, r2d2HeadTexture,  0f, m2ndObjectRotationZ);
 		draw3DSObject(r2d2Body3DSObject, r2d2BodyTexture,  0f, 0);
 	}
 
@@ -352,7 +396,7 @@ public class OpenGLRenderer implements Renderer {
 		De esta forma:
 			- 1º rotamos el modelo sobre el eje Y. Como está en (0,0,0), rotará sobre sí mismo.
 			- 2º movemos el modelo en el eje Y
-			- 3º rotamos el modelo en todos los ejes. El objeto rotará "orbitando" el punto (0, 0, 0)
+			- 3º rotamos el modelo en los 3 ejes. El objeto rotará "orbitando" el punto (0, 0, 0)
 			- 4º movemos el modelo en el eje Z
 		 */
 
@@ -390,8 +434,24 @@ public class OpenGLRenderer implements Renderer {
 		// Env?a la matriz modelMatrix al shader
 		glUniformMatrix4fv(uMVMatrixLocation, 1, false, modelMatrix, 0);
 		// Actualizamos el color
-		int[] color = discoColors[ getFrameIndex(370, discoColors.length) ]; // 370 = (1 / 162 BPM) * 60 * 1000
-		glUniform4f(uColorLocation, color[0] / 256f, color[1] / 256f, color[2] / 256f, 1.0f);
+		int[] color = discoColors[ getFrameIndex(DISCO_LIGHT_DURATION, discoColors.length, mDiscoStartedAt) ];
+		if (mDiscoMode) {
+			glUniform4f(uColorLocation, color[0] / 256f, color[1] / 256f, color[2] / 256f, 1.0f);
+		}
+		else {
+			glUniform4f(uColorLocation, 1.0f, 1.0f, 1.0f, 1.0f);
+		}
+
+		// Posición de las luces
+		if (mDiscoMode){
+			float[] lightPos = discoLights0[getFrameIndex(DISCO_LIGHT_DURATION, discoLights0.length, mDiscoStartedAt)];
+			glUniform3f(uLightPos0Location, lightPos[0], lightPos[1], lightPos[2]);
+			lightPos = discoLights1[getFrameIndex(DISCO_LIGHT_DURATION, discoLights1.length, mDiscoStartedAt)];
+			glUniform3f(uLightPos1Location, lightPos[0], lightPos[1], lightPos[2]);
+		} else {
+			glUniform3f(uLightPos0Location,  2,  5, 3);
+			glUniform3f(uLightPos1Location, -4, -5, 3);
+		}
 
 		// Pasamos la textura
 		glActiveTexture(GL_TEXTURE0);
@@ -418,10 +478,17 @@ public class OpenGLRenderer implements Renderer {
 		}
 	}
 
-	private int getFrameIndex(int frameDurationMillis, int frameCount) {
-		return (int)((System.currentTimeMillis() / frameDurationMillis) % frameCount);
+	private int getFrameIndex(int frameDurationMillis, int frameCount, long startedAt) {
+		return (int)(((System.currentTimeMillis() - startedAt) / frameDurationMillis) % frameCount);
 	}
 
+	private void setDiscoMode(boolean value) {
+		mDiscoMode = value;
+
+		if (mDiscoMode) {
+			mDiscoStartedAt = System.currentTimeMillis();
+		}
+	}
 	
 	public void handleTouchScroll(float normDistX, float normDistY) {
 		rotationDeltaX = -normDistY * 180f;
