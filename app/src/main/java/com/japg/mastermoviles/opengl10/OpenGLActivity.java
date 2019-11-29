@@ -45,6 +45,8 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
 
     private boolean mUseGyroscope = false;
 
+    private MusicPlayer mPlayer;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -111,8 +113,10 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
             }
         });
 
-        mSwipeView.setInstructionsText("Desliza el dedo para rotar"); // TODO: Desliza el dedo para rotar... ¿el qué?
+        mSwipeView.setInstructionsText("Desliza el dedo para rotar la cabeza");
         updateSwipeViewText(0);
+
+        mPlayer = new MusicPlayer(this);
     }
 
     @Override
@@ -261,6 +265,10 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
         if (rendererSet) {
             glSurfaceView.onPause();
         }
+
+        if (mOpenGLRenderer.mDiscoMode) {
+            toggleDiscoMode();
+        }
     }
 
     @Override
@@ -298,8 +306,20 @@ public class OpenGLActivity extends AppCompatActivity implements GestureDetector
     public void onToggleDiscoModeButtonClick(View v) {
         mFloatingActionsMenu.collapse();
 
-        boolean activado = mOpenGLRenderer.toggleDiscoMode();
+        boolean activado = toggleDiscoMode();
 
         Toast.makeText(this, "Modo discoteca " + (!activado ? "des" : "") + "activado", Toast.LENGTH_SHORT).show();
+    }
+
+    private boolean toggleDiscoMode() {
+        boolean activado = mOpenGLRenderer.toggleDiscoMode();
+
+        if (activado) {
+            mPlayer.play();
+        } else {
+            mPlayer.stop();
+        }
+
+        return activado;
     }
 }

@@ -11,7 +11,7 @@ varying vec3 v_N;                   // in: Normal del vértice
 
 void main()
 {
-	float ambient  = 0.4;									// intensidad ambiente
+	float ambient  = 0.2;									// intensidad ambiente
 	vec4  specularColor = vec4(1, 1, 1, 1);					// Color especular (brillos blancos)
 
 	vec3 P = v_P;                       					// Posición del vértice

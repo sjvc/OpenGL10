@@ -55,9 +55,8 @@ public class OpenGLRenderer implements Renderer {
 	private static final float MAX_Z = -1.5f;
 	private static final float MIN_Z = -70f;
 
-	private static final int   HEAD_ANIMATION_FRAME_DURATION = 250;
 	private static final float DISCO_MUSIC_BPM = 162.0f;
-	private static final int   DISCO_LIGHT_DURATION = (int)((1 / DISCO_MUSIC_BPM) * 60 * 1000);
+	private static final int DISCO_MUSIC_BEAT_DURATION = (int)((1 / DISCO_MUSIC_BPM) * 60 * 1000);
 	
 	// Para paralela
 	//private static final float TAM = 1.0f;
@@ -383,7 +382,7 @@ public class OpenGLRenderer implements Renderer {
 		glLineWidth(2.0f);
 
 		// Dibujamos los objetos
-		int r2d2HeadTexture = r2d2HeadTextureFrames[getFrameIndex(HEAD_ANIMATION_FRAME_DURATION, r2d2HeadTextureFrames.length, 0)];
+		int r2d2HeadTexture = r2d2HeadTextureFrames[getFrameIndex(DISCO_MUSIC_BEAT_DURATION, r2d2HeadTextureFrames.length, mDiscoStartedAt)];
 		draw3DSObject(r2d2Head3DSObject, r2d2HeadTexture,  0f, m2ndObjectRotationZ);
 		draw3DSObject(r2d2Body3DSObject, r2d2BodyTexture,  0f, 0);
 	}
@@ -432,7 +431,7 @@ public class OpenGLRenderer implements Renderer {
 		// Env?a la matriz modelMatrix al shader
 		glUniformMatrix4fv(uMVMatrixLocation, 1, false, modelMatrix, 0);
 		// Actualizamos el color
-		int[] color = discoColors[ getFrameIndex(DISCO_LIGHT_DURATION, discoColors.length, mDiscoStartedAt) ];
+		int[] color = discoColors[ getFrameIndex(DISCO_MUSIC_BEAT_DURATION, discoColors.length, mDiscoStartedAt) ];
 		if (mDiscoMode) {
 			glUniform4f(uColorLocation, color[0] / 256f, color[1] / 256f, color[2] / 256f, 1.0f);
 		}
@@ -442,9 +441,9 @@ public class OpenGLRenderer implements Renderer {
 
 		// Posición de las luces
 		if (mDiscoMode){
-			float[] lightPos = discoLights0[getFrameIndex(DISCO_LIGHT_DURATION, discoLights0.length, mDiscoStartedAt)];
+			float[] lightPos = discoLights0[getFrameIndex(DISCO_MUSIC_BEAT_DURATION, discoLights0.length, mDiscoStartedAt)];
 			glUniform3f(uLightPos0Location, lightPos[0], lightPos[1], lightPos[2]);
-			lightPos = discoLights1[getFrameIndex(DISCO_LIGHT_DURATION, discoLights1.length, mDiscoStartedAt)];
+			lightPos = discoLights1[getFrameIndex(DISCO_MUSIC_BEAT_DURATION, discoLights1.length, mDiscoStartedAt)];
 			glUniform3f(uLightPos1Location, lightPos[0], lightPos[1], lightPos[2]);
 		} else {
 			glUniform3f(uLightPos0Location,  2,  5, 3);
