@@ -57,6 +57,7 @@ public class OpenGLRenderer implements Renderer {
 
 	private static final float DISCO_MUSIC_BPM = 162.0f;
 	private static final int DISCO_MUSIC_BEAT_DURATION = (int)((1 / DISCO_MUSIC_BPM) * 60 * 1000);
+	private static final int DISCO_PRE_START_DURATION = 1483;
 	
 	// Para paralela
 	//private static final float TAM = 1.0f;
@@ -431,8 +432,13 @@ public class OpenGLRenderer implements Renderer {
 		// Env?a la matriz modelMatrix al shader
 		glUniformMatrix4fv(uMVMatrixLocation, 1, false, modelMatrix, 0);
 		// Actualizamos el color
-		int[] color = discoColors[ getFrameIndex(DISCO_MUSIC_BEAT_DURATION, discoColors.length, mDiscoStartedAt) ];
 		if (mDiscoMode) {
+			int[] color;
+			if (System.currentTimeMillis() - mDiscoStartedAt < DISCO_PRE_START_DURATION) {
+				color = discoColors[ getFrameIndex(DISCO_MUSIC_BEAT_DURATION / 10, discoColors.length, mDiscoStartedAt) ];
+			} else {
+				color = discoColors[ getFrameIndex(DISCO_MUSIC_BEAT_DURATION, discoColors.length, mDiscoStartedAt) ];
+			}
 			glUniform4f(uColorLocation, color[0] / 256f, color[1] / 256f, color[2] / 256f, 1.0f);
 		}
 		else {
