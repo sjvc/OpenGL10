@@ -432,25 +432,24 @@ public class OpenGLRenderer implements Renderer {
 		// Env?a la matriz modelMatrix al shader
 		glUniformMatrix4fv(uMVMatrixLocation, 1, false, modelMatrix, 0);
 
-		// Actualizamos el color
-		if (mDiscoMode) {
+		if (mDiscoMode){
 			int frameDuration = System.currentTimeMillis() - mDiscoStartedAt < DISCO_PRE_START_DURATION ? DISCO_MUSIC_BEAT_DURATION / 8 : DISCO_MUSIC_BEAT_DURATION;
+
+			// Actualizamos el color
 			int[] color;
 			color = discoColors[ getFrameIndex(frameDuration, discoColors.length, mDiscoStartedAt) ];
 			glUniform4f(uColorLocation, color[0] / 256f, color[1] / 256f, color[2] / 256f, 1.0f);
-		}
-		else {
-			glUniform4f(uColorLocation, 1.0f, 1.0f, 1.0f, 1.0f);
-		}
 
-		// Posición de las luces
-		if (mDiscoMode){
-			int frameDuration = System.currentTimeMillis() - mDiscoStartedAt < DISCO_PRE_START_DURATION ? DISCO_MUSIC_BEAT_DURATION / 10 : DISCO_MUSIC_BEAT_DURATION;
+			// Posición de las luces
 			float[] lightPos = discoLights0[getFrameIndex(frameDuration, discoLights0.length, mDiscoStartedAt)];
 			glUniform3f(uLightPos0Location, lightPos[0], lightPos[1], lightPos[2]);
 			lightPos = discoLights1[getFrameIndex(frameDuration, discoLights1.length, mDiscoStartedAt)];
 			glUniform3f(uLightPos1Location, lightPos[0], lightPos[1], lightPos[2]);
 		} else {
+			// Actualizamos el color
+			glUniform4f(uColorLocation, 1.0f, 1.0f, 1.0f, 1.0f);
+
+			// Posición de las luces
 			glUniform3f(uLightPos0Location,  2,  5, 3);
 			glUniform3f(uLightPos1Location, -4, -5, 3);
 		}
