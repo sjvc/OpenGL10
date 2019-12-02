@@ -431,14 +431,12 @@ public class OpenGLRenderer implements Renderer {
 		glUniformMatrix4fv(uMVPMatrixLocation, 1, false, MVP, 0);
 		// Env?a la matriz modelMatrix al shader
 		glUniformMatrix4fv(uMVMatrixLocation, 1, false, modelMatrix, 0);
+
 		// Actualizamos el color
 		if (mDiscoMode) {
+			int frameDuration = System.currentTimeMillis() - mDiscoStartedAt < DISCO_PRE_START_DURATION ? DISCO_MUSIC_BEAT_DURATION / 8 : DISCO_MUSIC_BEAT_DURATION;
 			int[] color;
-			if (System.currentTimeMillis() - mDiscoStartedAt < DISCO_PRE_START_DURATION) {
-				color = discoColors[ getFrameIndex(DISCO_MUSIC_BEAT_DURATION / 10, discoColors.length, mDiscoStartedAt) ];
-			} else {
-				color = discoColors[ getFrameIndex(DISCO_MUSIC_BEAT_DURATION, discoColors.length, mDiscoStartedAt) ];
-			}
+			color = discoColors[ getFrameIndex(frameDuration, discoColors.length, mDiscoStartedAt) ];
 			glUniform4f(uColorLocation, color[0] / 256f, color[1] / 256f, color[2] / 256f, 1.0f);
 		}
 		else {
@@ -447,9 +445,10 @@ public class OpenGLRenderer implements Renderer {
 
 		// Posición de las luces
 		if (mDiscoMode){
-			float[] lightPos = discoLights0[getFrameIndex(DISCO_MUSIC_BEAT_DURATION, discoLights0.length, mDiscoStartedAt)];
+			int frameDuration = System.currentTimeMillis() - mDiscoStartedAt < DISCO_PRE_START_DURATION ? DISCO_MUSIC_BEAT_DURATION / 10 : DISCO_MUSIC_BEAT_DURATION;
+			float[] lightPos = discoLights0[getFrameIndex(frameDuration, discoLights0.length, mDiscoStartedAt)];
 			glUniform3f(uLightPos0Location, lightPos[0], lightPos[1], lightPos[2]);
-			lightPos = discoLights1[getFrameIndex(DISCO_MUSIC_BEAT_DURATION, discoLights1.length, mDiscoStartedAt)];
+			lightPos = discoLights1[getFrameIndex(frameDuration, discoLights1.length, mDiscoStartedAt)];
 			glUniform3f(uLightPos1Location, lightPos[0], lightPos[1], lightPos[2]);
 		} else {
 			glUniform3f(uLightPos0Location,  2,  5, 3);
