@@ -302,19 +302,25 @@ public class OpenGLRenderer implements Renderer {
 		}
 		
 		// Leemos los shaders
+		/*
 		if (maxVertexTextureImageUnits[0]>0) {
 			// Textura soportada en el vertex shader
 			vertexShaderSource = TextResourceReader
-				.readTextFileFromResource(context, R.raw.sergio_goraud_vertex_shader);
+				.readTextFileFromResource(context, R.raw.specular_vertex_shader);
 			fragmentShaderSource = TextResourceReader
-				.readTextFileFromResource(context, R.raw.sergio_goraud_fragment_shader);
+				.readTextFileFromResource(context, R.raw.specular_fragment_shader);
 		} else {
 			// Textura no soportada en el vertex shader
 			vertexShaderSource = TextResourceReader
 				.readTextFileFromResource(context, R.raw.specular_vertex_shader2);
 			fragmentShaderSource = TextResourceReader
 				.readTextFileFromResource(context, R.raw.specular_fragment_shader2);			
-		}
+		}*/
+
+		vertexShaderSource = TextResourceReader
+				.readTextFileFromResource(context, R.raw.sergio_goraud_vertex_shader);
+		fragmentShaderSource = TextResourceReader
+				.readTextFileFromResource(context, R.raw.sergio_goraud_fragment_shader);
 		
 		// Compilamos los shaders
 		int vertexShader = ShaderHelper.compileVertexShader(vertexShaderSource);
